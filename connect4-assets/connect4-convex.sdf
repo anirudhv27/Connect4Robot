@@ -1,0 +1,162 @@
+<sdf xmlns:drake="drake.mit.edu" version="1.7">
+  <model name="connect4">
+    <link name="connect4">
+      <pose>0 0 0 0 0 0</pose>
+      <inertial>
+        <mass>1.0</mass>
+        <pose>0.00010 51.91765 34.29177 0 0 0</pose>
+        <inertia>
+          <ixx>9.89152e+02</ixx>
+          <ixy>-3.87512e-04</ixy>
+          <ixz>2.90967e-04</ixz>
+          <iyy>2.20512e+03</iyy>
+          <iyz>1.36900e-04</iyz>
+          <izz>1.23548e+03</izz>
+        </inertia>
+      </inertial>
+      <visual name="visual">
+        <material>
+          <ambient>0 0 1 1</ambient>
+          <diffuse>0 0 1 1</diffuse>
+        </material>
+        <geometry>
+          <mesh>
+            <uri>connect4.obj</uri>
+            <scale>0.005 0.005 0.005</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="outer_box_back">
+        <pose> 0 0.28 0.25 0 0 0</pose>
+        <geometry>
+          <box>
+            <size> 0.6 0.01 0.5 </size>
+          </box>
+        </geometry>
+        <drake:proximity_properties>
+          <drake:rigid_hydroelastic/>
+        </drake:proximity_properties>
+      </collision>
+      
+      <collision name="outer_box_front">
+        <pose> 0 0.24 0.25 0 0 0</pose>
+        <geometry>
+          <box>
+            <size> 0.6 0.01 0.5 </size>
+          </box>
+        </geometry>
+        <drake:proximity_properties>
+          <drake:rigid_hydroelastic/>
+        </drake:proximity_properties>
+      </collision>
+
+      <collision name="bottom">
+        <pose> 0 0.26 0.03 0 0 0</pose>
+        <geometry>
+          <box>
+            <size> 0.6 0.05 0.08 </size>
+          </box>
+        </geometry>
+        <drake:proximity_properties>
+          <drake:rigid_hydroelastic/>
+        </drake:proximity_properties>
+      </collision>
+
+      <collision name="column_1">
+        <pose> 0.295 0.26 0.25 0 0 0</pose>
+        <geometry>
+          <box>
+            <size> 0.01 0.05 0.5 </size>
+          </box>
+        </geometry>
+        <drake:proximity_properties>
+          <drake:rigid_hydroelastic/>
+        </drake:proximity_properties>
+      </collision>
+
+      <collision name="column_2">
+        <pose> 0.2107 0.26 0.25 0 0 0</pose>
+        <geometry>
+          <box>
+            <size> 0.01 0.05 0.5 </size>
+          </box>
+        </geometry>
+        <drake:proximity_properties>
+          <drake:rigid_hydroelastic/>
+        </drake:proximity_properties>
+      </collision>
+
+      <collision name="column_3">
+        <pose> 0.1264 0.26 0.25 0 0 0</pose>
+        <geometry>
+          <box>
+            <size> 0.01 0.05 0.5 </size>
+          </box>
+        </geometry>
+        <drake:proximity_properties>
+          <drake:rigid_hydroelastic/>
+        </drake:proximity_properties>
+      </collision>
+
+      <collision name="column_4">
+        <pose> 0.0421 0.26 0.25 0 0 0</pose>
+        <geometry>
+          <box>
+            <size> 0.01 0.05 0.5 </size>
+          </box>
+        </geometry>
+        <drake:proximity_properties>
+          <drake:rigid_hydroelastic/>
+        </drake:proximity_properties>
+      </collision>
+
+      <collision name="column_5">
+        <pose> -0.0421 0.26 0.25 0 0 0</pose>
+        <geometry>
+          <box>
+            <size> 0.01 0.05 0.5 </size>
+          </box>
+        </geometry>
+        <drake:proximity_properties>
+          <drake:rigid_hydroelastic/>
+        </drake:proximity_properties>
+      </collision>
+
+      <collision name="column_6">
+        <pose> -0.1264 0.26 0.25 0 0 0</pose>
+        <geometry>
+          <box>
+            <size> 0.01 0.05 0.5 </size>
+          </box>
+        </geometry>
+        <drake:proximity_properties>
+          <drake:rigid_hydroelastic/>
+        </drake:proximity_properties>
+      </collision>
+
+      <collision name="column_7">
+        <pose> -0.2107 0.26 0.25 0 0 0</pose>
+        <geometry>
+          <box>
+            <size> 0.01 0.05 0.5 </size>
+          </box>
+        </geometry>
+        <drake:proximity_properties>
+          <drake:rigid_hydroelastic/>
+        </drake:proximity_properties>
+      </collision>
+
+      <collision name="column_8">
+        <pose> -0.295 0.26 0.25 0 0 0</pose>
+        <geometry>
+          <box>
+            <size> 0.01 0.05 0.5 </size>
+          </box>
+        </geometry>
+        <drake:proximity_properties>
+          <drake:rigid_hydroelastic/>
+        </drake:proximity_properties>
+      </collision>
+    </link>
+  </model>
+</sdf>

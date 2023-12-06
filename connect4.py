@@ -8,6 +8,7 @@ from pydrake.all import (
     JacobianWrtVariable,
     LeafSystem,
     MeshcatVisualizer,
+    RollPitchYaw,
     MathematicalProgram,
     RandomGenerator,
     RigidTransform,
@@ -26,7 +27,7 @@ from manipulation.exercises.robot.test_hardware_station_io import (
 from manipulation.scenarios import AddIiwaDifferentialIK
 from manipulation.station import MakeHardwareStation, load_scenario
 
-from scenario import scenario_data
+from scenario import scenario_data, robot1_pose, robot2_pose
 
 class PoseSource(LeafSystem):
     def __init__(self, pose):
@@ -43,6 +44,7 @@ class PoseSource(LeafSystem):
         self._pose = new_pose
 
 class Connect4Game:
+    
     def __init__(self, meshcat): # Initialize Diagram with HardwareStation, 
         self.meshcat = meshcat
         self.build_diagram()
@@ -57,7 +59,7 @@ class Connect4Game:
 
         self.station = self.builder.AddSystem(MakeHardwareStation(self.scenario, meshcat=meshcat))
         self.plant = self.station.GetSubsystemByName("plant")
-
+        
         self.controller_plant_1 = self.station.GetSubsystemByName(
             "iiwa1.controller"
         ).get_multibody_plant_for_control()
@@ -67,7 +69,8 @@ class Connect4Game:
         ).get_multibody_plant_for_control()
 
         pose1 = RigidTransform()
-        pose1.set_translation([-0.25, -0.25, 0.5])
+        pose1.set_translation([0.4, 0, 0.55])
+        pose1.set_rotation(RollPitchYaw([-np.pi/2, 0, np.pi/2]))
         self.pose1_source = self.builder.AddSystem(PoseSource(pose1))
         controller1 = AddIiwaDifferentialIK(
             self.builder,
@@ -90,7 +93,10 @@ class Connect4Game:
             self.station.GetInputPort("iiwa1.position"),
         )
 
-        self.pose2_source = self.builder.AddSystem(PoseSource(pose1))
+        pose2 = RigidTransform()
+        pose2.set_translation([0.4, 0, 0.55])
+        pose2.set_rotation(RollPitchYaw([-np.pi/2, 0, np.pi/2]))
+        self.pose2_source = self.builder.AddSystem(PoseSource(pose2))
         controller2 = AddIiwaDifferentialIK(
             self.builder,
             self.controller_plant_2, 
@@ -173,24 +179,40 @@ class Connect4Game:
         self.diagram.ForcedPublish(self.context)
     
     def init_simulator(self):
-        simulator = Simulator(self.diagram, self.context)
-        simulator.set_target_realtime_rate(1.0)
-        simulator.AdvanceTo(0.1);
+        self.simulator_time = 0.1
+        self.simulator = Simulator(self.diagram, self.context)
+        self.simulator.set_target_realtime_rate(1.0)
+        self.simulator.AdvanceTo(self.simulator_time);
     
-    def set_pose(self, robot_num, pose: RigidTransform):
+    def move_gripper(self, robot_num, pose: RigidTransform):
+        '''
+        Helper to move gripper to specified pose in the world frame
+        '''
         if robot_num == 0:
             diff_ik_source = self.pose1_source
+            X_WG = robot1_pose.inverse() @ pose
         elif robot_num == 1:
             diff_ik_source = self.pose2_source
+            X_WG = robot2_pose.inverse() @ pose
+                
+        diff_ik_source.set_pose(X_WG)
         
-        diff_ik_source.set_pose(pose)
-
+        self.simulator_time += 1
+        self.simulator.AdvanceTo(self.simulator_time)
+    
+    def move_to_col(self, robot_num, pose: RigidTransform):
+        pass
+    
+    def advance_time(self, increment_time=0.1):
+        self.simulator_time += increment_time
+        self.simulator.AdvanceTo(self.simulator_time)
+            
 if __name__ == '__main__':
     meshcat = StartMeshcat()
     rng = np.random.default_rng(145)  # this is for python
     generator = RandomGenerator(rng.integers(0, 1000))  # this is for c++
     
     game = Connect4Game(meshcat)
-    while True:
-        pass
     
+    while True:
+        game.advance_time()

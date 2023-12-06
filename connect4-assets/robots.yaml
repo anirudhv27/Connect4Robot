@@ -15,8 +15,8 @@ directives:
     parent: world
     child: iiwa1::iiwa_link_0
     X_PC:
-        translation: [0.5, -0.5, 0]
-        rotation: !Rpy { deg: [0, 0, -90]}
+        translation: [0, -0.5, 0]
+        rotation: !Rpy { deg: [0, 0, 180]}
 - add_model:
     name: wsg1
     file: package://manipulation/hydro/schunk_wsg_50_with_tip.sdf
@@ -41,8 +41,7 @@ directives:
     parent: world
     child: iiwa2::iiwa_link_0
     X_PC:
-        translation: [-0.5, 0.5, 0]
-        rotation: !Rpy { deg: [0, 0, 90]}
+        translation: [0, 0.5, 0]
 - add_model:
     name: wsg2
     file: package://manipulation/hydro/schunk_wsg_50_with_tip.sdf

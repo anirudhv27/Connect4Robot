@@ -1,6 +1,18 @@
 import os
+from pydrake.all import RigidTransform, RollPitchYaw, Quaternion, AngleAxis
+import numpy as np
 
 current_directory = os.getcwd()
+
+robot1_pose = RigidTransform()
+robot1_pose.set_translation([0, 0.5, 0])
+rot = AngleAxis()
+rot.set_angle(180 * np.pi / 2)
+rot.set_axis([0, 0, 1])
+robot1_pose.set_rotation(rot)
+
+robot2_pose = RigidTransform()
+robot2_pose.set_translation([0, -0.5, 0])
 
 scenario_data = f"""
 directives:
@@ -15,12 +27,12 @@ directives:
     X_PC:
         translation: [0, -0.25, 0]
         
-- add_model:
-    name: table_top
-    file: file:///{current_directory}/connect4-assets/table_top.sdf
-- add_weld:
-    parent: world
-    child: table_top::table_top_center
+# - add_model:
+#     name: table_top
+#     file: file:///{current_directory}/connect4-assets/table_top.sdf
+# - add_weld:
+#     parent: world
+#     child: table_top::table_top_center
 """
 
 

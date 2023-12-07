@@ -49,15 +49,35 @@ class Connect4Game:
     def __init__(self, meshcat): # Initialize Diagram with HardwareStation, 
         self.meshcat = meshcat
         self.set_game_state()
+        print('here')
+        
         self.build_diagram()
+        # self.init_vacuum_constraints()
+        print('here')
         self.init_frames()
+        print('here')
+        
         self.init_robot()
+        print('here')
+        
         self.init_simulator()
+        print('here')
+        
     
     def set_game_state(self):
         self.next_red_coin = 0
         self.next_yellow_coin = 0
         self.curr_player = 0
+    
+    def init_vacuum_constraints(self):
+        inspector = self.scene_graph.model_inspector()
+        for gid in inspector.GetAllGeometryIds():
+            print(inspector.GetName(gid), inspector.GetName(inspector.GetFrameId(gid)))
+        inspector.GetName("red_chip_1")
+        print(inspector)
+    
+    def enable_vaccum_constraints(self):
+        pass
     
     def build_diagram(self):
         # Build diagram
@@ -125,13 +145,13 @@ class Connect4Game:
             self.station.GetInputPort("iiwa2.position"),
         )
 
-        wsg1_position = self.builder.AddSystem(ConstantVectorSource([0.1]))
+        wsg1_position = self.builder.AddSystem(ConstantVectorSource([0]))
         self.builder.Connect(
             wsg1_position.get_output_port(),
             self.station.GetInputPort("wsg1.position"),
         )
 
-        wsg2_position = self.builder.AddSystem(ConstantVectorSource([0.1]))
+        wsg2_position = self.builder.AddSystem(ConstantVectorSource([0]))
         self.builder.Connect(
             wsg2_position.get_output_port(),
             self.station.GetInputPort("wsg2.position"),
@@ -142,6 +162,7 @@ class Connect4Game:
         )
 
         self.diagram = self.builder.Build() 
+        self.scene_graph = self.station.GetSubsystemByName("scene_graph")
     
     def init_frames(self):
         self.gripper_frame_1 = self.controller_plant_1.GetFrameByName("body")
@@ -173,14 +194,14 @@ class Connect4Game:
         self.plant.SetPositions(self.plant_context, self.iiwa1, q0)
         self.plant.SetVelocities(self.plant_context, self.iiwa1, np.zeros(7))
         self.wsg1 = self.plant.GetModelInstanceByName("wsg1")
-        self.plant.SetPositions(self.plant_context, self.wsg1, [-0.05, 0.05])
+        self.plant.SetPositions(self.plant_context, self.wsg1, [-0.001, 0.001])
         self.plant.SetVelocities(self.plant_context, self.wsg1, [0, 0])
 
         self.iiwa2 = self.plant.GetModelInstanceByName("iiwa2")
         self.plant.SetPositions(self.plant_context, self.iiwa2, q0)
         self.plant.SetVelocities(self.plant_context, self.iiwa2, np.zeros(7))
         self.wsg2 = self.plant.GetModelInstanceByName("wsg2")
-        self.plant.SetPositions(self.plant_context, self.wsg2, [-0.05, 0.05])
+        self.plant.SetPositions(self.plant_context, self.wsg2, [-0.001, 0.001])
         self.plant.SetVelocities(self.plant_context, self.wsg2, [0, 0])   
         
         self.velocity_1 = self.plant.GetVelocities(self.plant_context, self.iiwa1)

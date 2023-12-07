@@ -12,7 +12,7 @@ rot.set_axis([0, 0, 1])
 robot1_pose.set_rotation(rot)
 
 robot2_pose = RigidTransform()
-robot2_pose.set_translation([0, -0.5, 0])
+robot2_pose.set_translation([0, 0.5, 0])
 
 scenario_data = f"""
 directives:
@@ -27,29 +27,38 @@ directives:
     X_PC:
         translation: [0, -0.25, 0]
         
-# - add_model:
-#     name: table_top
-#     file: file:///{current_directory}/connect4-assets/table_top.sdf
-# - add_weld:
-#     parent: world
-#     child: table_top::table_top_center
+- add_model:
+    name: table_top
+    file: file:///{current_directory}/connect4-assets/table_top.sdf
+- add_weld:
+    parent: world
+    child: table_top::table_top_center
 """
 
 
-NUM_CHIPS = 7
+NUM_CHIPS = 5
 for i in range(1, NUM_CHIPS+1):
-  height = (i - 1) * 0.1
-  offset = 0.0825 * (i - 4)
-  
+  x_coord = 0.0825 * ((i - 1) % 5) + 0.35
+  y_coord = 0.0825 * ((i - 1) // 5) + 0.35
+    
   scenario_data += f"""
 - add_model:
     name: red_chip_{i}
     file: file:///{current_directory}/connect4-assets/red_chip.sdf
     default_free_body_pose:
         red_chip:
-            translation: [{offset}, 0.022, 0.6]
+            translation: [{x_coord}, {y_coord}, 0.05]
             rotation: !Rpy
-                deg: [90, 0, 0]
+                deg: [0, 0, 0]
+                
+- add_model:
+    name: yellow_chip_{i}
+    file: file:///{current_directory}/connect4-assets/yellow_chip.sdf
+    default_free_body_pose:
+        yellow_chip:
+            translation: [{-x_coord}, {-y_coord}, 0.05]
+            rotation: !Rpy
+                deg: [0, 0, 0]
                 
   """
     

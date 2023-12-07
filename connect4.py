@@ -19,6 +19,7 @@ from pydrake.all import (
     ge,
     le,
 )
+import re
 
 from pydrake.systems.framework import GenerateHtml
 from manipulation.exercises.robot.test_hardware_station_io import (
@@ -27,7 +28,7 @@ from manipulation.exercises.robot.test_hardware_station_io import (
 from manipulation.scenarios import AddIiwaDifferentialIK
 from manipulation.station import MakeHardwareStation, load_scenario
 
-from scenario import scenario_data, robot1_pose, robot2_pose
+from scenario import scenario_data, robot1_pose, robot2_pose, NUM_CHIPS
 from col_poses import col_poses
 
 class PoseSource(LeafSystem):
@@ -48,34 +49,51 @@ class Connect4Game:
     
     def __init__(self, meshcat): # Initialize Diagram with HardwareStation, 
         self.meshcat = meshcat
-        self.set_game_state()
-        print('here')
-        
+        self.set_game_state()        
         self.build_diagram()
-        # self.init_vacuum_constraints()
-        print('here')
-        self.init_frames()
-        print('here')
-        
-        self.init_robot()
-        print('here')
-        
-        self.init_simulator()
-        print('here')
-        
+        self.init_frames()        
+        self.init_robot()        
+        self.init_simulator()        
     
     def set_game_state(self):
         self.next_red_coin = 0
         self.next_yellow_coin = 0
         self.curr_player = 0
     
-    def init_vacuum_constraints(self):
-        inspector = self.scene_graph.model_inspector()
-        for gid in inspector.GetAllGeometryIds():
-            print(inspector.GetName(gid), inspector.GetName(inspector.GetFrameId(gid)))
-        inspector.GetName("red_chip_1")
-        print(inspector)
-    
+    def init_vacuum_constraints(self, parser):
+        plant = parser.plant()
+        self.red_chip_constraints = [[None], [None]] # wsg 1 and wsg 2
+        self.yellow_chip_constraints = [[None], [None]]
+        
+        wsg1_model_instance = plant.GetModelInstanceByName("wsg1")
+        wsg1_tip = plant.GetBodyByName("left_finger", wsg1_model_instance)
+        
+        wsg2_model_instance = plant.GetModelInstanceByName("wsg2")
+        wsg2_tip = plant.GetBodyByName("left_finger", wsg2_model_instance)
+        
+        # Red Chips
+        for i in range(1, NUM_CHIPS + 1):
+            model_instance = plant.GetModelInstanceByName(f"red_chip_{i}")
+            body = plant.GetBodyByName("red_chip", model_instance)
+            
+            wsg1_constraint_id = plant.AddDistanceConstraint(body, [0, 0, 0], wsg1_tip, [0, 0, 0], 0.1)
+            wsg2_constraint_id = plant.AddDistanceConstraint(body, [0, 0, 0], wsg2_tip, [0, 0, 0], 0.1)
+            
+            
+            self.red_chip_constraints[0].append(wsg1_constraint_id)
+            self.red_chip_constraints[1].append(wsg2_constraint_id)
+        
+        # Yellow Chips
+        for i in range(1, NUM_CHIPS + 1):
+            model_instance = plant.GetModelInstanceByName(f"yellow_chip_{i}")
+            body = plant.GetBodyByName("yellow_chip", model_instance)
+            
+            wsg1_constraint_id = plant.AddDistanceConstraint(body, [0, 0, 0], wsg1_tip, [0, 0, 0], 0.01)
+            wsg2_constraint_id = plant.AddDistanceConstraint(body, [0, 0, 0], wsg2_tip, [0, 0, 0], 0.01)
+            
+            self.yellow_chip_constraints[0].append(wsg1_constraint_id)
+            self.yellow_chip_constraints[1].append(wsg2_constraint_id)            
+                
     def enable_vaccum_constraints(self):
         pass
     
@@ -84,7 +102,7 @@ class Connect4Game:
         self.builder = DiagramBuilder()
         self.scenario = load_scenario(data=scenario_data)
 
-        self.station = self.builder.AddSystem(MakeHardwareStation(self.scenario, meshcat=meshcat))
+        self.station = self.builder.AddSystem(MakeHardwareStation(self.scenario, meshcat=meshcat, parser_prefinalize_callback=self.init_vacuum_constraints))
         self.plant = self.station.GetSubsystemByName("plant")
         
         self.controller_plant_1 = self.station.GetSubsystemByName(
@@ -162,7 +180,6 @@ class Connect4Game:
         )
 
         self.diagram = self.builder.Build() 
-        self.scene_graph = self.station.GetSubsystemByName("scene_graph")
     
     def init_frames(self):
         self.gripper_frame_1 = self.controller_plant_1.GetFrameByName("body")

@@ -29,7 +29,7 @@ from manipulation.scenarios import AddIiwaDifferentialIK
 from manipulation.station import MakeHardwareStation, load_scenario
 
 from scenario import scenario_data, robot1_pose, robot2_pose, NUM_CHIPS
-from col_poses import col_poses
+from col_poses import col_poses_red, col_poses_yellow
 
 class PoseSource(LeafSystem):
     def __init__(self, pose):
@@ -73,12 +73,17 @@ class Connect4Game:
         wsg2_model_instance = plant.GetModelInstanceByName("wsg2")
         wsg2_tip = plant.GetBodyByName("body", wsg2_model_instance)
         
+        pose = RigidTransform()
+        pose.set_translation([0, 0.15, 0])
+        pose.set_rotation(RollPitchYaw([np.pi/2, 0, 0]))
+        
         # Yellow Chips
         for i in range(1, NUM_CHIPS + 1):
             model_instance = plant.GetModelInstanceByName(f"yellow_chip_{i}")
             body = plant.GetBodyByName("yellow_chip", model_instance)
             
-            wsg1_constraint_id = plant.AddDistanceConstraint(body, [0, 0, 0], wsg1_tip, [0, 0.15, 0], 0.01)
+            # wsg1_constraint_id = plant.AddDistanceConstraint(body, [0, 0, 0], wsg1_tip, [0, 0.15, 0], 0.01)
+            wsg1_constraint_id = plant.AddWeldConstraint(body, RigidTransform(), wsg1_tip, pose)
             
             self.yellow_chip_constraints.append(wsg1_constraint_id)
         
@@ -87,7 +92,8 @@ class Connect4Game:
             model_instance = plant.GetModelInstanceByName(f"red_chip_{i}")
             body = plant.GetBodyByName("red_chip", model_instance)
             
-            wsg2_constraint_id = plant.AddDistanceConstraint(body, [0, 0, 0], wsg2_tip, [0.1, 0, 0], 0.01)
+            # wsg2_constraint_id = plant.AddDistanceConstraint(body, [0, 0, 0], wsg2_tip, [0.1, 0, 0], 0.01)
+            wsg2_constraint_id = plant.AddWeldConstraint(body, RigidTransform(), wsg2_tip, pose)
             
             self.red_chip_constraints.append(wsg2_constraint_id)
                 
@@ -293,7 +299,8 @@ class Connect4Game:
         pose = RigidTransform()
         x_coord = 0.0825 * ((next_coin) % 5) + 0.35
         y_coord = 0.0825 * ((next_coin) // 5) + 0.35
-        pose.set_translation([x_coord, y_coord, 0.2])
+        
+        pose.set_translation([x_coord, y_coord, 0.12])
         pose.set_rotation(RollPitchYaw([-np.pi/2, 0, np.pi/2]))
         
         self.move_gripper(robot_num, pose=pose)
@@ -322,11 +329,9 @@ class Connect4Game:
             print("Out of chips!")
             return False
         
-        print(grabbed_id)
+        col_poses = col_poses_yellow if robot_num == 0 else col_poses_red
         self.move_gripper(robot_num, col_poses[col_num - 1])
-        # Todo: Release chip
         self.plant.SetConstraintActiveStatus(self.plant_context, grabbed_id, False)
-        print("released!")
         
         self.reset_robot_hand(robot_num)
         

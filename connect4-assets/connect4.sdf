@@ -2,18 +2,6 @@
 <sdf xmlns:drake="http://drake.mit.edu" version="1.8">
   <model name='connect4'>
     <link name='connect4'>
-      <inertial>
-        <pose>4.865388826951866e-07 0.2595882660706928 0.17145886121983184 0 0 0</pose>
-        <mass>4.039441587497695</mass>
-        <inertia>
-          <ixx>0.09989056538111266</ixx>
-          <ixy>-3.913328012020264e-08</ixy>
-          <ixz>2.9383630787919026e-08</ixz>
-          <iyy>0.22268649072286587</iyy>
-          <iyz>1.3824964806823133e-08</iyz>
-          <izz>0.12476632429488378</izz>
-        </inertia>
-      </inertial>
       <visual name='visual'>
         <pose>0.0 -0.25 0.0 0 0 0</pose>
         <material>

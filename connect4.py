@@ -64,37 +64,32 @@ class Connect4Game:
     
     def init_vacuum_constraints(self, parser):
         plant = parser.plant()
-        self.red_chip_constraints = [[None], [None]] # wsg 1 and wsg 2
-        self.yellow_chip_constraints = [[None], [None]]
+        self.yellow_chip_constraints = [] # wsg 1
+        self.red_chip_constraints = [] # wsg2
         
         wsg1_model_instance = plant.GetModelInstanceByName("wsg1")
-        wsg1_tip = plant.GetBodyByName("left_finger", wsg1_model_instance)
+        wsg1_tip = plant.GetBodyByName("body", wsg1_model_instance)
         
         wsg2_model_instance = plant.GetModelInstanceByName("wsg2")
-        wsg2_tip = plant.GetBodyByName("left_finger", wsg2_model_instance)
-        
-        # Red Chips
-        for i in range(1, NUM_CHIPS + 1):
-            model_instance = plant.GetModelInstanceByName(f"red_chip_{i}")
-            body = plant.GetBodyByName("red_chip", model_instance)
-            
-            wsg1_constraint_id = plant.AddDistanceConstraint(body, [0, 0, 0], wsg1_tip, [0, 0, 0], 0.1)
-            wsg2_constraint_id = plant.AddDistanceConstraint(body, [0, 0, 0], wsg2_tip, [0, 0, 0], 0.1)
-            
-            
-            self.red_chip_constraints[0].append(wsg1_constraint_id)
-            self.red_chip_constraints[1].append(wsg2_constraint_id)
+        wsg2_tip = plant.GetBodyByName("body", wsg2_model_instance)
         
         # Yellow Chips
         for i in range(1, NUM_CHIPS + 1):
             model_instance = plant.GetModelInstanceByName(f"yellow_chip_{i}")
             body = plant.GetBodyByName("yellow_chip", model_instance)
             
-            wsg1_constraint_id = plant.AddDistanceConstraint(body, [0, 0, 0], wsg1_tip, [0, 0, 0], 0.01)
-            wsg2_constraint_id = plant.AddDistanceConstraint(body, [0, 0, 0], wsg2_tip, [0, 0, 0], 0.01)
+            wsg1_constraint_id = plant.AddDistanceConstraint(body, [0, 0, 0], wsg1_tip, [0, 0.15, 0], 0.01)
             
-            self.yellow_chip_constraints[0].append(wsg1_constraint_id)
-            self.yellow_chip_constraints[1].append(wsg2_constraint_id)            
+            self.yellow_chip_constraints.append(wsg1_constraint_id)
+        
+        # Red Chips
+        for i in range(1, NUM_CHIPS + 1):
+            model_instance = plant.GetModelInstanceByName(f"red_chip_{i}")
+            body = plant.GetBodyByName("red_chip", model_instance)
+            
+            wsg2_constraint_id = plant.AddDistanceConstraint(body, [0, 0, 0], wsg2_tip, [0.1, 0, 0], 0.01)
+            
+            self.red_chip_constraints.append(wsg2_constraint_id)
                 
     def enable_vaccum_constraints(self):
         pass
@@ -194,6 +189,11 @@ class Connect4Game:
         self.plant_context = self.diagram.GetMutableSubsystemContext(
             self.plant, self.context
         )
+
+        all_constraints = self.red_chip_constraints + self.yellow_chip_constraints
+        for constraint_id in all_constraints:
+            if constraint_id is not None:
+                self.plant.SetConstraintActiveStatus(self.plant_context, constraint_id, False)
 
         # provide initial states
         q0 = np.array(
@@ -298,30 +298,35 @@ class Connect4Game:
         
         self.move_gripper(robot_num, pose=pose)
         
-        # TODO: grab chip
+        # Grab chip
         if robot_num == 0:
-            self.next_yellow_coin += 1
+            constraint_id = self.yellow_chip_constraints[next_coin]
         elif robot_num == 1:
-            self.next_red_coin += 1
+            constraint_id = self.red_chip_constraints[next_coin]
             
-        return True
+        self.plant.SetConstraintActiveStatus(self.plant_context, constraint_id, True)
+            
+        return constraint_id
     
     def drop_piece(self, col_num, robot_num):
         board_col_num = col_num - 1
         if robot_num == 1: # Red pieces
-            board_col_num = 7 - board_col_num
+            board_col_num = 6 - board_col_num
         
         if self.board[0][board_col_num] != ' ':
             print("Column is full, not valid!")
             return False
         
-        grabbed = self.grab_next_chip(robot_num)
-        if not grabbed:
+        grabbed_id = self.grab_next_chip(robot_num)
+        if not grabbed_id:
             print("Out of chips!")
             return False
         
+        print(grabbed_id)
         self.move_gripper(robot_num, col_poses[col_num - 1])
         # Todo: Release chip
+        self.plant.SetConstraintActiveStatus(self.plant_context, grabbed_id, False)
+        print("released!")
         
         self.reset_robot_hand(robot_num)
         
@@ -330,6 +335,11 @@ class Connect4Game:
             if row[board_col_num] == ' ':
                 row[board_col_num] = self.curr_player
                 break
+        
+        if robot_num == 0:
+            self.next_yellow_coin += 1
+        elif robot_num == 1:
+            self.next_red_coin += 1
                             
     def check_winner(self): # Returns the player who wins if at all
         # Check horizontal, vertical, and diagonal for winning condition

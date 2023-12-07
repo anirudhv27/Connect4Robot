@@ -53,12 +53,14 @@ class Connect4Game:
         self.build_diagram()
         self.init_frames()        
         self.init_robot()        
-        self.init_simulator()        
+        self.init_simulator()
     
     def set_game_state(self):
         self.next_red_coin = 0
         self.next_yellow_coin = 0
         self.curr_player = 0
+        
+        self.board = [[' ' for _ in range(7)] for _ in range(6)]
     
     def init_vacuum_constraints(self, parser):
         plant = parser.plant()
@@ -304,9 +306,16 @@ class Connect4Game:
             
         return True
     
-    def do_turn(self, col_num, robot_num):
-        grabbed = self.grab_next_chip(robot_num)
+    def drop_piece(self, col_num, robot_num):
+        board_col_num = col_num - 1
+        if robot_num == 1: # Red pieces
+            board_col_num = 7 - board_col_num
         
+        if self.board[0][board_col_num] != ' ':
+            print("Column is full, not valid!")
+            return False
+        
+        grabbed = self.grab_next_chip(robot_num)
         if not grabbed:
             print("Out of chips!")
             return False
@@ -315,7 +324,36 @@ class Connect4Game:
         # Todo: Release chip
         
         self.reset_robot_hand(robot_num)
-        self.curr_player = 1 - self.curr_player
+        
+        # Update game state
+        for row in reversed(self.board):
+            if row[board_col_num] == ' ':
+                row[board_col_num] = self.curr_player
+                break
+                            
+    def check_winner(self): # Returns the player who wins if at all
+        # Check horizontal, vertical, and diagonal for winning condition
+        for row in range(6):
+            for col in range(7):
+                if self.board[row][col] != ' ':
+                    if self.check_direction(row, col, 1, 0) or \
+                       self.check_direction(row, col, 0, 1) or \
+                       self.check_direction(row, col, 1, 1) or \
+                       self.check_direction(row, col, 1, -1):
+                        return self.board[row][col]
+        return None
+
+    def check_direction(self, row, col, delta_row, delta_col):
+        consecutive = 0
+        player = self.board[row][col]
+        for _ in range(4):
+            if 0 <= row < 6 and 0 <= col < 7 and self.board[row][col] == player:
+                consecutive += 1
+                row += delta_row
+                col += delta_col
+            else:
+                break
+        return consecutive == 4
     
     def advance_time(self, increment_time=0.1):
         self.simulator_time += increment_time
@@ -330,5 +368,14 @@ if __name__ == '__main__':
     
     while True:
         col_num = int(input("Please give me a column number (1-7): "))
-        game.do_turn(col_num, robot_num=game.curr_player) 
-        game.advance_time()
+        game.drop_piece(col_num, robot_num=game.curr_player) 
+        winner = game.check_winner()
+        if winner:
+            print(f"Player {winner} wins!")
+            break
+        
+        if all(game.board[0][col] != ' ' for col in range(7)):
+            game.display_board()
+            print("The game is a draw.")
+        
+        game.curr_player = 1 - game.curr_player

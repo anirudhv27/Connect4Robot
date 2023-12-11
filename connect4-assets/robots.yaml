@@ -51,3 +51,45 @@ directives:
     X_PC:
         translation: [0, 0, 0.09]
         rotation: !Rpy { deg: [90, 0, 90]}
+
+- add_frame:
+    name: camera0_staging
+    X_PF:
+        base_frame: world
+        rotation: !Rpy { deg: [0, 0, 0]}
+
+- add_frame:
+    name: camera0_origin
+    X_PF:
+        base_frame: camera0_staging
+        rotation: !Rpy { deg: [-130.0, 0, 0]}
+        translation: [.5, 0, .5]
+
+- add_model:
+    name: camera0
+    file: package://manipulation/camera_box.sdf
+
+- add_weld:
+    parent: camera0_origin
+    child: camera0::base
+
+- add_frame:
+    name: camera1_staging
+    X_PF:
+        base_frame: world
+        rotation: !Rpy { deg: [0, 0, 0]}
+
+- add_frame:
+    name: camera1_origin
+    X_PF:
+        base_frame: camera1_staging
+        rotation: !Rpy { deg: [-130.0, 0, 180.0]}
+        translation: [-.5, 0, .5]
+
+- add_model:
+    name: camera1
+    file: package://manipulation/camera_box.sdf
+
+- add_weld:
+    parent: camera1_origin
+    child: camera1::base

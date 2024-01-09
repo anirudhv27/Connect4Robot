@@ -497,16 +497,16 @@ class Connect4Game:
         # Find the number of chips in the frame, along with the average coordinate of each
         labeled_mask_iterative_red, num_components_iterative_red = self.label_components_iterative(red_mask_img)
         average_coordinates_red = self.average_pixel_coordinates(labeled_mask_iterative_red, num_components_iterative_red)
-        # color_seg_red = self.visualize_components(labeled_mask_iterative_red, num_components_iterative_red)
-        # plt.imshow(color_seg_red)
-        # plt.show()
+        color_seg_red = self.visualize_components(labeled_mask_iterative_red, num_components_iterative_red)
+        plt.imshow(color_seg_red)
+        plt.show()
         
 
         labeled_mask_iterative_yellow, num_components_iterative_yellow = self.label_components_iterative(yellow_mask_img)
         average_coordinates_yellow = self.average_pixel_coordinates(labeled_mask_iterative_yellow, num_components_iterative_yellow)
-        # color_seg_yellow = self.visualize_components(labeled_mask_iterative_yellow, num_components_iterative_yellow)
-        # plt.imshow(color_seg_yellow)
-        # plt.show()
+        color_seg_yellow = self.visualize_components(labeled_mask_iterative_yellow, num_components_iterative_yellow)
+        plt.imshow(color_seg_yellow)
+        plt.show()
         
         # Convert pixel coords to 3d coords in camera frame
         red_depths = np.array([np.array([u, v, depth_image_red.data[u, v].item()]) for u, v in average_coordinates_red])
@@ -747,6 +747,8 @@ game = Connect4Game(meshcat)
 while True:
     col_num = int(input("Please give me a column number (1-7): "))
     game.drop_piece(col_num, robot_num=game.curr_player) 
+    game.plot_manipulation_station_camera_images()
+    
     winner = game.check_winner()
     if winner:
         print(f"Player {winner} wins!")
